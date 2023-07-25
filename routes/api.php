@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\AgesController;
+use App\Http\Controllers\CitiesController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -17,3 +19,17 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+Route::controller(CitiesController::class)->group(
+    function () {
+        Route::get('/cities', 'index');
+        Route::post('/cities', 'store');
+    }
+);
+
+Route::controller(AgesController::class)->group(
+    function () {
+        Route::get('/age', 'index');
+        Route::post('/age', 'store');
+    }
+);
