@@ -13,4 +13,9 @@ class City extends Model
         'name',
         'value',
     ];
+
+    public function insurances()
+    {
+        return $this->hasMany(Insurance::class);
+    }
 }

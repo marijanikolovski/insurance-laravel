@@ -2,6 +2,9 @@
 
 use App\Http\Controllers\AgesController;
 use App\Http\Controllers\CitiesController;
+use App\Http\Controllers\CoveragesController;
+use App\Http\Controllers\DiscountsController;
+use App\Http\Controllers\InsuranceController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -31,5 +34,26 @@ Route::controller(AgesController::class)->group(
     function () {
         Route::get('/age', 'index');
         Route::post('/age', 'store');
+    }
+);
+
+Route::controller(DiscountsController::class)->group(
+    function () {
+        Route::get('/discounts', 'index');
+        Route::post('/discounts', 'store');
+    }
+);
+
+Route::controller(CoveragesController::class)->group(
+    function () {
+        Route::get('/coverages', 'index');
+        Route::post('/coverages', 'store');
+    }
+);
+
+
+Route::controller(InsuranceController::class)->group(
+    function () {
+        Route::post('/total', 'calculatePrice');
     }
 );
