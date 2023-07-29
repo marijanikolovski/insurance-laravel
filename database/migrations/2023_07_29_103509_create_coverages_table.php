@@ -16,7 +16,8 @@ class CreateCoveragesTable extends Migration
         Schema::create('coverages', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->integer('value');
+            $table->integer('value')->nullable();
+            $table->integer('value_user_over30')->nullable();
             $table->string('description');
             $table->timestamps();
         });

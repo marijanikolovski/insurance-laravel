@@ -12,6 +12,7 @@ class Coverage extends Model
     protected $fillable = [
         'name',
         'value',
+        'value_user_over30',
         'description'
     ];
 

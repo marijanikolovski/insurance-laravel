@@ -25,7 +25,8 @@ class CoverageRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255',
-            'value' => 'required|integer',
+            'value' => 'integer',
+            'value_user_over30' => 'integer',
             'description' => 'required|string|max:255',
         ];
     }
