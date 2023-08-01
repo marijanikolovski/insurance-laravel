@@ -4,51 +4,67 @@ namespace App\Services;
 
 use App\Models\Coverage;
 use App\Models\Discount;
+use App\ValueObjects\CustomerData;
+use App\ValueObjects\PriceMatchCalculation;
 
 class InsuranceWithPriceMatch
 {
-  public function calculationWithPriceMatch(object $request): array
+  public function calculationWithPriceMatch(CustomerData $customerData): array
   {
-    $value_bonus_protection = 0;
-    $value_commercial_discount = 0;
-    $voucher = 0;
+
+    $priceMathcCalculate = new PriceMatchCalculation();
+    $toArray = $priceMathcCalculate->toArray();
 
     $coverages = Coverage::all();
-    $discoutns = Discount::all();
+    $discounts = Discount::all();
 
     // Calculation of the basic price based on the city without age
-    $base_price_without_age = BasePrice::calculateBasePriceWithoutAge($request->input('city_id'));
+    $base_price_without_age = BasePrice::calculateBasePriceWithoutAge(
+      $customerData->getCityId()
+    );
 
     $total_price = $base_price_without_age;
 
     //The total price minus the value of the voucher
-    if ($request->input('voucher')) {
-      $voucher = $request->input('voucher');
-      $total_price -= $request->input('voucher');
+    if ($customerData->getVoucher()) {
+      $toArray['voucher'] = $customerData->getVoucher();
+      $total_price -= $customerData->getVoucher();
     }
 
     if (
-      $base_price_without_age < $request->input('price_match')
+      $base_price_without_age < $customerData->getPriceMatch()
     ) {
       // Calculation of coveraage for bonus protection
       foreach ($coverages as $coverageBase) {
-        if ($coverageBase->name === 'Bonus Protection') {
-          $value_bonus_protection = DiscountsCoverages::calculateDiscountsCoverages($coverageBase->value, $base_price_without_age);
-          $total_price += $value_bonus_protection;
+        if ($coverageBase->name !== 'Bonus Protection') {
+          continue;
         }
+
+        $toArray['value_bonus_protection'] =
+        DiscountsCoverages::calculateDiscountsCoverages(
+          $coverageBase->value,
+          $base_price_without_age
+        );
+        $total_price += $toArray['value_bonus_protection'];
       }
-      if ($total_price < $request->input('price_match')) {
-        $total_price;
-      } else {
-        foreach ($discoutns as $discount) {
+
+      if ($total_price > $customerData->getPriceMatch()) {
+        foreach ($discounts as $discount) {
           // Calculation of discount for commercial discount
-          if ($discount->name === 'Commercial discount') {
-            $value_commercial_discount = DiscountsCoverages::calculateDiscountsCoverages($discount->value, $base_price_without_age);
-            $total_price -= $value_commercial_discount;
+          if ($discount->name !== 'Commercial discount') {
+            continue;
           }
+
+          $toArray['value_commercial_discount'] =
+            DiscountsCoverages::calculateDiscountsCoverages(
+              $discount->value,
+              $base_price_without_age
+            );
+          $total_price -= $toArray['value_commercial_discount'];
         }
       }
-      if ($total_price > $request->input('price_match')) {
+
+      if ($total_price > $customerData->getPriceMatch()) {
         $total_price = $base_price_without_age;
       }
 
@@ -60,10 +76,10 @@ class InsuranceWithPriceMatch
     // Return the calculated total price, base price, dicounts and coverages
     return [
       'message' => $message,
-      'price_match' => $request->input('price_match'),
-      'value_commercial_discount' => $value_commercial_discount,
-      'value_bonus_protection' => $value_bonus_protection,
-      'voucher' => $voucher,
+      'price_match' => $customerData->getPriceMatch(),
+      'value_commercial_discount' => $toArray['value_commercial_discount'],
+      'value_bonus_protection' => $toArray['value_bonus_protection'],
+      'voucher' => $toArray['voucher'],
       'base_price_without_age' => $base_price_without_age,
       'total_price' => $total_price,
     ];
